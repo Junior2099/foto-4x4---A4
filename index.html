@@ -150,51 +150,72 @@
         }
 
         function drawImagesInBlocks() {
-            const blockWidth = 472; 
-            const blockHeight = 472; 
-            const padding = 100; 
+    const blockWidth = 472; 
+    const blockHeight = 472; 
+    const padding = 100; 
 
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            const blocksPerRow = 4;
-            const blocksPerColumn = 6;
-            const totalWidth = (blockWidth + padding) * blocksPerRow - padding;
-            const totalHeight = (blockHeight + padding) * blocksPerColumn - padding;
+    const blocksPerRow = 4;
+    const blocksPerColumn = 6;
+    const totalWidth = (blockWidth + padding) * blocksPerRow - padding;
+    const totalHeight = (blockHeight + padding) * blocksPerColumn - padding;
 
-            const startX = (canvas.width - totalWidth) / 2;
-            const startY = (canvas.height - totalHeight) / 2;
+    const startX = (canvas.width - totalWidth) / 2;
+    const startY = (canvas.height - totalHeight) / 2;
 
-            const transformations = [];
-            for (let sy = 0; sy < blocksPerColumn; sy++) {
-                for (let sx = 0; sx < blocksPerRow; sx++) {
-                    transformations.push({ sx, sy });
-                }
-            }
+    const transformations = [];
+    for (let sy = 0; sy < blocksPerColumn; sy++) {
+        for (let sx = 0; sx < blocksPerRow; sx++) {
+            transformations.push({ sx, sy });
+        }
+    }
 
-            function calculateCrop(img, targetWidth, targetHeight) {
-                const imgRatio = img.width / img.height;
-                const targetRatio = targetWidth / targetHeight;
+    function calculateCrop(img, targetWidth, targetHeight) {
+        const imgRatio = img.width / img.height;
+        const targetRatio = targetWidth / targetHeight;
 
-                let sourceWidth, sourceHeight, sourceX, sourceY;
+        let sourceWidth, sourceHeight, sourceX, sourceY;
 
-                if (imgRatio > targetRatio) {
-                    sourceHeight = img.height;
-                    sourceWidth = sourceHeight * targetRatio;
-                    sourceX = (img.width - sourceWidth) / 2;
-                    sourceY = 0;
-                } else {
-                    sourceWidth = img.width;
-                    sourceHeight = sourceWidth / targetRatio;
-                    sourceX = 0;
-                    sourceY = (img.height - sourceHeight) / 2;
-                }
+        if (imgRatio > targetRatio) {
+            sourceHeight = img.height;
+            sourceWidth = sourceHeight * targetRatio;
+            sourceX = (img.width - sourceWidth) / 2;
+            sourceY = 0;
+        } else {
+            sourceWidth = img.width;
+            sourceHeight = sourceWidth / targetRatio;
+            sourceX = 0;
+            sourceY = (img.height - sourceHeight) / 2;
+        }
 
-                return { sourceX, sourceY, sourceWidth, sourceHeight };
-            }
+        return { sourceX, sourceY, sourceWidth, sourceHeight };
+    }
 
-            transformations.forEach((transform, index) => {
-                const img = images[index % images.length];
+    if (images.length <= 5) {
+        let imageIndex = 0;
+        transformations.forEach((transform, index) => {
+            const img = images[imageIndex % images.length];
+            const crop = calculateCrop(img, blockWidth, blockHeight);
+
+            const x = startX + transform.sx * (blockWidth + padding);
+            const y = startY + transform.sy * (blockHeight + padding);
+
+            ctx.drawImage(
+                img, 
+                crop.sourceX, crop.sourceY, crop.sourceWidth, crop.sourceHeight,
+                x, y, 
+                blockWidth, 
+                blockHeight
+            );
+
+            imageIndex++;
+        });
+    } else {
+        transformations.forEach((transform, index) => {
+            if (index < images.length) {
+                const img = images[index];
                 const crop = calculateCrop(img, blockWidth, blockHeight);
 
                 const x = startX + transform.sx * (blockWidth + padding);
@@ -207,8 +228,10 @@
                     blockWidth, 
                     blockHeight
                 );
-            });
-        }
+            }
+        });
+    }
+}
 
         function saveImage() {
             const imgURL = canvas.toDataURL("image/jpeg");
